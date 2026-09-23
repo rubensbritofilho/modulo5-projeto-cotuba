@@ -10,24 +10,31 @@ import com.itextpdf.layout.element.AreaBreak;
 import com.itextpdf.layout.element.IBlockElement;
 import com.itextpdf.layout.element.IElement;
 import com.itextpdf.layout.properties.AreaBreakType;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-public class GeradorPDF {
+@ApplicationScoped @Named("geradorPDF")
+public class GeradorPDF implements GeradorEbook {
 
-    public void gerarPDF(List<String> htmls, Path arquivoDeSaida) {
+    @Override
+    public void gerar(Ebook ebook) {
+        List<Capitulo> capitulos = ebook.getCapitulos();
+        Path arquivoDeSaida = ebook.getArquivoDeSaida();
+
         try (var writer = new PdfWriter(Files.newOutputStream(arquivoDeSaida));
              var pdf = new PdfDocument(writer);
              var pdfDocument = new Document(pdf)) {
 
             //TODO: definir título e autor para o livro
-            pdf.getDocumentInfo().setTitle("Livro");
-            pdf.getDocumentInfo().setAuthor("Autor");
-            htmls.forEach(html -> {
+            pdf.getDocumentInfo().setTitle(ebook.getTitulo());
+            pdf.getDocumentInfo().setAuthor(ebook.getAutor());
+            capitulos.forEach(capitulo -> {
+                String html = capitulo.getHtml();
                 List<IElement> convertToElements = HtmlConverter.convertToElements(html);
-
                 if (pdf.getNumberOfPages() == 0) {
                     pdf.addNewPage();
                 }
@@ -37,8 +44,8 @@ public class GeradorPDF {
                     rootOutline = pdf.getOutlines(false);
                 }
 
-                // TODO: usar título do capítulo
-                PdfOutline chapterOutline = rootOutline.addOutline("Capítulo");
+                String tituloCapitulo = capitulo.getTitulo();
+                PdfOutline chapterOutline = rootOutline.addOutline(tituloCapitulo);
                 chapterOutline.addDestination(PdfExplicitDestination.createFit(pdf.getLastPage()));
 
                 for (IElement element : convertToElements) {

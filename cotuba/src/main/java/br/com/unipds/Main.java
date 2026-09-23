@@ -1,7 +1,7 @@
 package br.com.unipds;
-import java.nio.file.Path;
-import java.util.List;
 
+import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.enterprise.inject.se.SeContainerInitializer;
 import nl.siegmann.epublib.domain.*;
 public class Main {
 
@@ -17,38 +17,21 @@ public class Main {
 
         boolean modoVerboso = true;
 
-        try{
-            LeitorOpcoesCLI leitorOpcoesCLI = new LeitorOpcoesCLI();
-            leitorOpcoesCLI.ler(args);
+        try(SeContainer container = SeContainerInitializer.newInstance().initialize()){
+            LeitorOpcoesCLI leitorOpcoesCLI =container.select(LeitorOpcoesCLI.class).get();
+            ParametrosCotuba parametrosCotuba = leitorOpcoesCLI.ler(args);
 
-            Path diretorioDosMD = leitorOpcoesCLI.getDiretorioDosMD();
-            String formato = leitorOpcoesCLI.getFormato();
-            Path arquivoDeSaida = leitorOpcoesCLI.getArquivoDeSaida();
             modoVerboso = leitorOpcoesCLI.isModoVerboso();
-
-            RenderizadorMarkdown renderizadorMarkdown = new RenderizadorMarkdown();
-            List<String> htmls = renderizadorMarkdown.renderizar(diretorioDosMD);
-
-            if ("pdf".equals(formato)) {
-                GeradorPDF geradorPDF = new GeradorPDF();
-                geradorPDF.gerarPDF(htmls, arquivoDeSaida);
-
-            } else if ("epub".equals(formato)) {
-                GeradorEPUB geradorEPUB = new GeradorEPUB();
-                geradorEPUB.gerarEPUB(htmls, arquivoDeSaida);
-
-            } else {
-               throw new IllegalArgumentException("Formato do ebook inválido: " + formato);
-            }
-
-                System.out.println("Arquivo gerado com sucesso: " + arquivoDeSaida);
-                return 0;
+            CotubaService cotubaService = container.select(CotubaService.class).get();
+            cotubaService.executar(parametrosCotuba);
+            System.out.println("Arquivo gerado com sucesso: " + parametrosCotuba.getArquivoSaida());
+            return 0;
 
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
             if (modoVerboso) {
                 System.err.println();
-                ex.printStackTrace();
+                throw new IllegalStateException(ex);
             }
             return 1;
         }

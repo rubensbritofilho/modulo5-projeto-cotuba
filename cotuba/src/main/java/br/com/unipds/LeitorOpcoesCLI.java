@@ -1,5 +1,6 @@
 package br.com.unipds;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -14,15 +15,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 
-
+@ApplicationScoped
 public class LeitorOpcoesCLI {
 
-    private Path diretorioDosMD;
-    private String formato;
-    private Path arquivoDeSaida;
     private boolean modoVerboso = false;
 
-    public void ler(String[] args){
+    public ParametrosCotuba ler(String[] args){
         var options = new Options();
 
         var opcaoDeDiretorioDosMD = new Option("d", "dir", true,
@@ -56,6 +54,11 @@ public class LeitorOpcoesCLI {
 
         try {
 
+            Path diretorioDosMD;
+            FormatoEbook formato;
+            Path arquivoDeSaida;
+            ParametrosCotuba parametrosCotuba = new ParametrosCotuba();
+
             String nomeDoDiretorioDosMD = cmd.getOptionValue("dir");
 
             if (nomeDoDiretorioDosMD != null) {
@@ -64,24 +67,26 @@ public class LeitorOpcoesCLI {
                     throw new IllegalArgumentException(nomeDoDiretorioDosMD + " não é um diretório.");
                 }
             } else {
-                Path diretorioAtual = Paths.get("..","apostila-design");
-
-                diretorioDosMD = diretorioAtual;
+                diretorioDosMD= Paths.get("apostila-design");
             }
 
             String nomeDoFormatoDoEbook = cmd.getOptionValue("format");
 
             if (nomeDoFormatoDoEbook != null) {
-                formato = nomeDoFormatoDoEbook.toLowerCase();
+                try {
+                    formato = FormatoEbook.valueOf(nomeDoFormatoDoEbook.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("Formato do ebook inválido: "+nomeDoFormatoDoEbook.toUpperCase());
+                }
             } else {
-                formato = "pdf";
+                formato = FormatoEbook.PDF;
             }
 
             String nomeDoArquivoDeSaidaDoEbook = cmd.getOptionValue("output");
             if (nomeDoArquivoDeSaidaDoEbook != null) {
                 arquivoDeSaida = Paths.get(nomeDoArquivoDeSaidaDoEbook);
             } else {
-                arquivoDeSaida = Paths.get("book." + formato.toLowerCase());
+                arquivoDeSaida = Paths.get("book." + formato.name().toLowerCase());
             }
             if (Files.isDirectory(arquivoDeSaida)) {
                 // deleta arquivos do diretório recursivamente
@@ -91,36 +96,18 @@ public class LeitorOpcoesCLI {
                 Files.deleteIfExists(arquivoDeSaida);
             }
 
-            modoVerboso = cmd.hasOption("verbose");
+            this.modoVerboso = cmd.hasOption("verbose");
+            parametrosCotuba.setDiretorioMD(diretorioDosMD);
+            parametrosCotuba.setFormato(formato);
+            parametrosCotuba.setArquivoSaida(arquivoDeSaida);
+            parametrosCotuba.setModoVerboso(this.modoVerboso);
+            return parametrosCotuba;
 
         }catch (Exception ex){
              throw new IllegalStateException(ex);
         }
     }
 
-    public Path getDiretorioDosMD() {
-        return diretorioDosMD;
-    }
-
-    public void setDiretorioDosMD(Path diretorioDosMD) {
-        this.diretorioDosMD = diretorioDosMD;
-    }
-
-    public String getFormato() {
-        return formato;
-    }
-
-    public void setFormato(String formato) {
-        this.formato = formato;
-    }
-
-    public Path getArquivoDeSaida() {
-        return arquivoDeSaida;
-    }
-
-    public void setArquivoDeSaida(Path arquivoDeSaida) {
-        this.arquivoDeSaida = arquivoDeSaida;
-    }
 
     public boolean isModoVerboso() {
         return modoVerboso;

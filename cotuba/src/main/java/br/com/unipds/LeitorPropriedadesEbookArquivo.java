@@ -18,7 +18,7 @@ public class LeitorPropriedadesEbookArquivo implements LeitorPropriedadesEbook {
     }
 
     @Override
-    public void ler(Path diretorioMD, Ebook ebook) {
+    public PropriedadesEbook ler(Path diretorioMD) {
         Path arquivoProperties = diretorioMD.resolve("ebook.properties");
 
         if (!Files.exists(arquivoProperties)) {
@@ -35,13 +35,11 @@ public class LeitorPropriedadesEbookArquivo implements LeitorPropriedadesEbook {
 
         String titulo = properties.getProperty(propriedadeTitulo);
         validarPropriedades(titulo, propriedadeTitulo);
-        ebook.setTitulo(titulo);
         String propriedadeAutor = "cotuba.ebook.autor";
 
         String autor = properties.getProperty(propriedadeAutor);
         validarPropriedades(autor, propriedadeAutor);
-        ebook.setAutor(properties.getProperty("cotuba.ebook.autor"));
-
+        return new PropriedadesEbook(titulo, autor);
     }
 
 }

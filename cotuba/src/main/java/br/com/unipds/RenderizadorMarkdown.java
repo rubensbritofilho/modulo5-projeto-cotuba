@@ -1,11 +1,10 @@
 package br.com.unipds;
 
-import java.nio.file.Path;
 import java.util.List;
 
 
 public interface RenderizadorMarkdown {
-        void renderizar(List<Capitulo> capitulos);
+        List<Capitulo> renderizar(List<Markdown> markdowns);
 
 }
 

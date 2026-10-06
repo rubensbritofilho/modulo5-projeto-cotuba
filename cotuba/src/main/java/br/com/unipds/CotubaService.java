@@ -1,8 +1,9 @@
 package br.com.unipds;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Any;
+import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
-import jakarta.inject.Named;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -13,45 +14,37 @@ public class CotubaService {
     private final RenderizadorMarkdownCommonMark renderizadorMarkdown;
     private final LeitorPropriedadesEbook leitorPropriedadesEbook;
     private final RepositorioMarkdownsDiretorio repositorioMarkdownsDiretorio;
-    private final GeradorEbook geradorEPUB;
-    private final GeradorEbook geradorPDF;
+    private final Instance<GeradorEbook> geradororesEbook;
 
     @Inject
     public CotubaService(RenderizadorMarkdownCommonMark renderizadorMarkdown, LeitorPropriedadesEbook leitorPropriedadesEbook, RepositorioMarkdownsDiretorio repositorioMarkdownsDiretorio,
-                         @Named("geradorEPUB") GeradorEbook geradorEPUB, @Named("geradorPDF") GeradorEbook geradorPDF) {
+                         @Any Instance<GeradorEbook> geradororesEbook) {
         this.renderizadorMarkdown = renderizadorMarkdown;
         this.leitorPropriedadesEbook = leitorPropriedadesEbook;
         this.repositorioMarkdownsDiretorio = repositorioMarkdownsDiretorio;
-        this.geradorEPUB = geradorEPUB;
-        this.geradorPDF = geradorPDF;
+        this.geradororesEbook = geradororesEbook;
     }
 
     public void executar(ParametrosCotuba par){
-        Path diretorioMD = par.getDiretorioMD();
+        Path diretorioMD = par.diretorioMD();
 
-        List<Capitulo> capitulos = repositorioMarkdownsDiretorio.buscar(diretorioMD);
+        List<Markdown > markdowns = repositorioMarkdownsDiretorio.buscar(diretorioMD);
 
-        renderizadorMarkdown.renderizar(capitulos);
+        List<Capitulo> capitulos =  renderizadorMarkdown.renderizar(markdowns);
 
-        Ebook ebook = new Ebook();
+        var propriedadeEbook = leitorPropriedadesEbook.ler(par.diretorioMD());
 
-        leitorPropriedadesEbook.ler(par.getDiretorioMD(), ebook);
+        var ebook = EbookBuilder.builder()
+                .titulo(propriedadeEbook.titulo())
+                .autor(propriedadeEbook.autor())
+                .capitulos(capitulos)
+                .formato(par.formato())
+                .arquivoDeSaida(par.arquivoSaida())
+                .build();
 
-        ebook.setTitulo("Apostila de Design");
-        ebook.setAutor("UNIPDS");
-        ebook.setCapitulos(capitulos);
-        ebook.setFormato(par.getFormato());
-        ebook.setArquivoDeSaida(par.getArquivoSaida());
 
-        GeradorEbook geradorEbook;
+        GeradorEbook geradorEbook = geradororesEbook.select(FormatoEbookFilter.of(ebook.formato())).get();
 
-        if (FormatoEbook.PDF.equals(ebook.getFormato())) {
-            geradorEbook =  geradorPDF;
-        } else if (FormatoEbook.EPUB.equals(ebook.getFormato())) {
-            geradorEbook = geradorEPUB;
-        } else {
-            throw new IllegalArgumentException("Formato do ebook inválido: " + ebook.getFormato());
-        }
         geradorEbook.gerar(ebook);
 
     }

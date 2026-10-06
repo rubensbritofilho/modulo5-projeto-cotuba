@@ -12,7 +12,8 @@ import java.util.stream.Stream;
 
 @ApplicationScoped
 public class RepositorioMarkdownsDiretorio implements RepositorioMarkdowns {
-    public static Capitulo capitulo(Path arquivoMD) {
+
+    /*public static Capitulo capitulo(Path arquivoMD) {
         try {
             var capitulo = new Capitulo();
             String markdown = Files.readString(arquivoMD);
@@ -22,9 +23,9 @@ public class RepositorioMarkdownsDiretorio implements RepositorioMarkdowns {
         }catch(IOException ex){
             throw new IllegalStateException("Erro ao ler o arquivo " + arquivoMD.toAbsolutePath(), ex);
         }
-    }
+    }*/
 
-    public List<Capitulo> buscar(Path diretorioMD){
+    public List<Markdown> buscar(Path diretorioMD){
         PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**/*.md");
         try (Stream<Path> streamMDs = Files.list(diretorioMD)) {
             List<Path> arquivosMD = streamMDs
@@ -35,7 +36,16 @@ public class RepositorioMarkdownsDiretorio implements RepositorioMarkdowns {
                 throw new IllegalStateException("Não foram encontrados capítulos (arquivos .md) no diretório: " + diretorioMD.toAbsolutePath());
             }
 
-            return arquivosMD.stream().map(RepositorioMarkdownsDiretorio::capitulo).toList();
+            return arquivosMD.stream()
+                    .map(arquivoMD -> {
+                        try {
+                            String conteudo = Files.readString(arquivoMD);
+                            return new Markdown(conteudo, arquivoMD);
+                        } catch (IOException ex) {
+                            throw new IllegalStateException("Erro ao ler o arquivo: " + arquivoMD.toAbsolutePath(), ex);
+                        }
+                    })
+                    .toList();
         }catch(IOException ex){
             throw new IllegalStateException("Erro tentando encontrar arquivos .md");
         }

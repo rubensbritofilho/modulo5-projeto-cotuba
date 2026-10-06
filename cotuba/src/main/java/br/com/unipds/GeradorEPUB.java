@@ -17,24 +17,25 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-@ApplicationScoped @Named("geradorEPUB")
+@FormatoEbookQualifier(FormatoEbook.EPUB)
+@ApplicationScoped
 public class GeradorEPUB implements GeradorEbook {
 
     public void gerar(Ebook ebook) {
-        List<Capitulo> capitulos = ebook.getCapitulos();
-        Path arquivoDeSaida = ebook.getArquivoDeSaida();
+        List<Capitulo> capitulos = ebook.capitulos();
+        Path arquivoDeSaida = ebook.arquivoDeSaida();
         try {
             var epub = new Book();
 
             //TODO: definir título e autor para o livro
-            epub.getMetadata().addTitle(ebook.getTitulo());
-            epub.getMetadata().addAuthor(new Author(ebook.getAutor()));
+            epub.getMetadata().addTitle(ebook.titulo());
+            epub.getMetadata().addAuthor(new Author(ebook.autor()));
 
             boolean[] ehPrimeiroCapitulo = {true};
 
             capitulos.forEach(capitulo -> {
-                        String tituloDoCapitulo = capitulo.getTitulo();
-                        String html = capitulo.getHtml();
+                        String tituloDoCapitulo = capitulo.titulo();
+                        String html = capitulo.html();
                 try{
                         StringWriter sw = new StringWriter();
                         XMLStreamWriter writer = XMLOutputFactory.newInstance().
@@ -45,7 +46,7 @@ public class GeradorEPUB implements GeradorEbook {
 
                             writer.writeStartElement("head");
                             writer.writeStartElement("title");
-                            writer.writeCharacters(ebook.getTitulo());
+                            writer.writeCharacters(ebook.titulo());
                             writer.writeEndElement();
                             writer.writeEndElement();
 
@@ -67,7 +68,7 @@ public class GeradorEPUB implements GeradorEbook {
                             }
                         }catch(XMLStreamException ex){
                             throw new IllegalStateException("Erro ao capitulo do  EPUB: " +
-                                    capitulo.getTitulo(), ex);
+                                    capitulo.titulo(), ex);
                         }
                     });
 

@@ -5,8 +5,9 @@ import jakarta.enterprise.inject.se.SeContainerInitializer;
 import nl.siegmann.epublib.domain.*;
 public class Main {
 
-    void main(String[] args) {
-        int exitCode = executar(args);
+    public static void main(String[] args) {
+        int exitCode = new Main().executar(args);
+
         if (exitCode != 0) {
             System.exit(exitCode);
         }
@@ -24,14 +25,14 @@ public class Main {
             modoVerboso = leitorOpcoesCLI.isModoVerboso();
             CotubaService cotubaService = container.select(CotubaService.class).get();
             cotubaService.executar(parametrosCotuba);
-            System.out.println("Arquivo gerado com sucesso: " + parametrosCotuba.getArquivoSaida());
+            System.out.println("Arquivo gerado com sucesso: " + parametrosCotuba.arquivoSaida());
             return 0;
 
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
             if (modoVerboso) {
                 System.err.println();
-                throw new IllegalStateException(ex);
+                ex.printStackTrace(System.err);
             }
             return 1;
         }

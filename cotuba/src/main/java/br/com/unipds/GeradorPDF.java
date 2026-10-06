@@ -17,23 +17,24 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-@ApplicationScoped @Named("geradorPDF")
+@FormatoEbookQualifier(FormatoEbook.PDF)
+@ApplicationScoped
 public class GeradorPDF implements GeradorEbook {
 
     @Override
     public void gerar(Ebook ebook) {
-        List<Capitulo> capitulos = ebook.getCapitulos();
-        Path arquivoDeSaida = ebook.getArquivoDeSaida();
+        List<Capitulo> capitulos = ebook.capitulos();
+        Path arquivoDeSaida = ebook.arquivoDeSaida();
 
         try (var writer = new PdfWriter(Files.newOutputStream(arquivoDeSaida));
              var pdf = new PdfDocument(writer);
              var pdfDocument = new Document(pdf)) {
 
             //TODO: definir título e autor para o livro
-            pdf.getDocumentInfo().setTitle(ebook.getTitulo());
-            pdf.getDocumentInfo().setAuthor(ebook.getAutor());
+            pdf.getDocumentInfo().setTitle(ebook.titulo());
+            pdf.getDocumentInfo().setAuthor(ebook.autor());
             capitulos.forEach(capitulo -> {
-                String html = capitulo.getHtml();
+                String html = capitulo.html();
                 List<IElement> convertToElements = HtmlConverter.convertToElements(html);
                 if (pdf.getNumberOfPages() == 0) {
                     pdf.addNewPage();
@@ -44,7 +45,7 @@ public class GeradorPDF implements GeradorEbook {
                     rootOutline = pdf.getOutlines(false);
                 }
 
-                String tituloCapitulo = capitulo.getTitulo();
+                String tituloCapitulo = capitulo.titulo();
                 PdfOutline chapterOutline = rootOutline.addOutline(tituloCapitulo);
                 chapterOutline.addDestination(PdfExplicitDestination.createFit(pdf.getLastPage()));
 

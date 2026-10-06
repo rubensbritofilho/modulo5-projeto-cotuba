@@ -57,7 +57,6 @@ public class LeitorOpcoesCLI {
             Path diretorioDosMD;
             FormatoEbook formato;
             Path arquivoDeSaida;
-            ParametrosCotuba parametrosCotuba = new ParametrosCotuba();
 
             String nomeDoDiretorioDosMD = cmd.getOptionValue("dir");
 
@@ -97,11 +96,8 @@ public class LeitorOpcoesCLI {
             }
 
             this.modoVerboso = cmd.hasOption("verbose");
-            parametrosCotuba.setDiretorioMD(diretorioDosMD);
-            parametrosCotuba.setFormato(formato);
-            parametrosCotuba.setArquivoSaida(arquivoDeSaida);
-            parametrosCotuba.setModoVerboso(this.modoVerboso);
-            return parametrosCotuba;
+
+            return new ParametrosCotuba(diretorioDosMD,formato,arquivoDeSaida,this.modoVerboso);
 
         }catch (Exception ex){
              throw new IllegalStateException(ex);

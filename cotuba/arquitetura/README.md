@@ -45,11 +45,17 @@ Integração com o mailchimp para envio de emails
         {   Container(api,"API Principal", "Java, SpringBoot","Regras de negócio, catálogo de vendas, segurançam, financeiro")
             Container(webap,"Frontend","","UI para os autores e leitores")
             
-            Container(gerador,"Serviço de geração de ebook","Java, Spring Boot","Serviço que é o Motor da transformação de livros Markdown para pdf e epub")
+            Container(gerador,"Serviço de geração de ebook (Worker)","Java, Spring Boot","Serviço que é o Motor da transformação de livros Markdown para pdf e epub")
     
             ContainerDb(db,"BD Relacional","PostgreSQL (AWS RDS)","Armazenar dados financeiros dos usuários, catálogos.")
-    
+
+            ContainerQueue(broquer,"Message Broker","AWS SQS","Fila de mensagens para processamento assincrono de dados financeiros.")
+
+            ContainerDb(cache,"Cache de Memória","Redis (AWS Elasticache),"Arma o catálogo de livros mais vendidos (Top 100) para leitura ultrarapida.")
+
             ContainerDb(storage,"Armezenamento de arquivos","Object Storage (AWS S3)","Capas dos livros, PDF, EBUP binários")
+        
+            
         }
         
         Rel(autor,webap,"","HTTPS")
@@ -57,16 +63,23 @@ Integração com o mailchimp para envio de emails
         
         Rel(webap,api,"","HTTPS/JSON")
         Rel(webap,storage,"Faz download dos ebooks e imagens","HTTPS")
-        
+
+        Rel(api,cache,"Lê/Escreve catálogo em cache (Cache-Aside)","TCP")
         Rel(api,db,"Transaciona com o banco de dados","JDBC")
         Rel(api,pagamento,"Processa pagamentos","TTP/JSON")
         Rel(api,storage,"Salva capa dos livros e gera URLs de download","S3 API")
         Rel(api,email,"Envia dados de avisos, notificações e recibos","HTTPS/JSON")
-        Rel(api,gerador,"Solicitar geração de arquivos pesados","HTTPS/JSON")
+        Rel(api,gerador,"Solicitar geração de arquivos pesados","TCP???")
     
         Rel(gerador,git,"Clonar repositório do livro","SSH")
         Rel(gerador,storage,"Faz upload de pdf/epubs gerados","SSH")
+        Rel(broker,gerador,"GeracaoEbookCommand vai ser comsumido pelo gerador","TCP???")
     
         System_Ext(git, "Provedor Git externo", "Armazena o código fonte")
         System_Ext(pagamento, "Gateway de pagamentos", "Stripe - Processamento de pagamento - PIx ou Cartão de Crédito")
         System_Ext(email, "Sistema de e-mail externo", "Enviar recibos, notificações e avisos.")
+
+## Decisoes Arquiteturais (ADRs)
+- [ADR 001: Geracao de ebooks via mensageria assincrona](./adr/adr-0001-geracao-ebooks-assincrona.md)
+- [ADR 002: Cache Catalogo em memoria para o catalogo de ebooks e pagamentos](./adr/adr-0002-cache-catalogo-em-memoria.md)  
+

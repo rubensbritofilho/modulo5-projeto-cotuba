@@ -1,8 +1,8 @@
 package br.com.unipds.estatisticas;
 
-import br.com.unipds.cotuba.domain.Ebook;
-import br.com.unipds.cotuba.domain.Capitulo;
-import br.com.unipds.cotuba.plugin.CotubaPlugin;
+import br.com.unipds.cotuba.adapters.in.cli.domain.Capitulo;
+import br.com.unipds.cotuba.adapters.in.cli.domain.Ebook;
+import br.com.unipds.cotuba.adapters.in.cli.plugin.CotubaPluginAposGeracao;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
@@ -10,11 +10,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public class PluginEstatisticas implements CotubaPlugin {
-    @Override
-    public String aposRenderizacao(String s) {
-        return "";
-    }
+public class PluginEstatisticas implements CotubaPluginAposGeracao {
 
     @Override
     public void aposGeracao(Ebook ebook) {
